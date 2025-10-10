@@ -5,7 +5,7 @@ Quick start
 Backend
 1. cd backend
 2. npm install
-3. Copy env: `copy .env.example .env` (Windows PowerShell)
+3. Copy env: `copy .env.example .env` 
 4. npm run dev
 
 Endpoints
