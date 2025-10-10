@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: cmc-library-db
+    environment:
+      POSTGRES_DB: cmc_library
+      POSTGRES_USER: cmc_user
+      POSTGRES_PASSWORD: cmc_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - cmc-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: cmc-library-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cmc-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cmc-library-backend
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://cmc_user:cmc_password@postgres:5432/cmc_library
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - cmc-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: cmc-library-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - uploads_data:/var/www/uploads
+    depends_on:
+      - backend
+    networks:
+      - cmc-network
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  cmc-network:
+    driver: bridge

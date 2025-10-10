@@ -1,0 +1,121 @@
+#!/usr/bin/env node
+
+import { Sequelize } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+
+const sequelize = new Sequelize(process.env.DATABASE_URL || 'sqlite::memory:', {
+  dialect: process.env.DB_DIALECT || 'sqlite',
+  logging: false
+});
+
+async function seedDatabase() {
+  try {
+    console.log('🔄 Connecting to database...');
+    await sequelize.authenticate();
+    console.log('✅ Database connection established successfully.');
+
+    console.log('🔄 Seeding database with sample data...');
+
+    // Create users
+    const users = await sequelize.query(`
+      INSERT INTO users (id, username, email, password_hash, role, created_at, updated_at) VALUES
+      ('11111111-1111-1111-1111-111111111111', 'admin', 'admin@cmc-library.com', '${await bcrypt.hash('admin123', 10)}', 'admin', NOW(), NOW()),
+      ('22222222-2222-2222-2222-222222222222', 'john_doe', 'john@example.com', '${await bcrypt.hash('password123', 10)}', 'user', NOW(), NOW()),
+      ('33333333-3333-3333-3333-333333333333', 'jane_smith', 'jane@example.com', '${await bcrypt.hash('password123', 10)}', 'user', NOW(), NOW()),
+      ('44444444-4444-4444-4444-444444444444', 'bob_wilson', 'bob@example.com', '${await bcrypt.hash('password123', 10)}', 'user', NOW(), NOW())
+      ON CONFLICT (email) DO NOTHING;
+    `);
+
+    console.log('✅ Users seeded successfully.');
+
+    // Create books
+    const books = await sequelize.query(`
+      INSERT INTO books (id, title, author, category, description, pdf_path, file_size, uploaded_by, downloads_count, created_at, updated_at) VALUES
+      ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Introduction to Computer Science', 'Dr. Sarah Johnson', 'Education', 'A comprehensive guide to computer science fundamentals.', '/uploads/pdfs/intro-cs.pdf', 2048000, '11111111-1111-1111-1111-111111111111', 45, NOW(), NOW()),
+      ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'The Art of Programming', 'Robert Martin', 'Technology', 'Clean code principles and best practices for software development.', '/uploads/pdfs/art-programming.pdf', 1536000, '22222222-2222-2222-2222-222222222222', 32, NOW(), NOW()),
+      ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Data Structures and Algorithms', 'Thomas Cormen', 'Science', 'Essential algorithms and data structures for computer science students.', '/uploads/pdfs/dsa.pdf', 3072000, '11111111-1111-1111-1111-111111111111', 28, NOW(), NOW()),
+      ('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Machine Learning Basics', 'Andrew Ng', 'Technology', 'Introduction to machine learning concepts and applications.', '/uploads/pdfs/ml-basics.pdf', 2560000, '33333333-3333-3333-3333-333333333333', 19, NOW(), NOW()),
+      ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Web Development Guide', 'Mozilla Developer Network', 'Technology', 'Complete guide to modern web development technologies.', '/uploads/pdfs/web-dev.pdf', 1792000, '22222222-2222-2222-2222-222222222222', 67, NOW(), NOW())
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    console.log('✅ Books seeded successfully.');
+
+    // Create meetings
+    const meetings = await sequelize.query(`
+      INSERT INTO meetings (id, title, description, scheduled_at, duration, created_by, room_url, status, created_at, updated_at) VALUES
+      ('ffffffff-ffff-ffff-ffff-ffffffffffff', 'Weekly Team Standup', 'Daily standup meeting to discuss progress and blockers.', NOW() + INTERVAL '1 day', 30, '11111111-1111-1111-1111-111111111111', 'room_standup_001', 'scheduled', NOW(), NOW()),
+      ('gggggggg-gggg-gggg-gggg-gggggggggggg', 'Project Planning Session', 'Planning session for the new library features.', NOW() + INTERVAL '2 days', 90, '22222222-2222-2222-2222-222222222222', 'room_planning_001', 'scheduled', NOW(), NOW()),
+      ('hhhhhhhh-hhhh-hhhh-hhhh-hhhhhhhhhhhh', 'Code Review Meeting', 'Review recent code changes and discuss improvements.', NOW() + INTERVAL '3 days', 60, '33333333-3333-3333-3333-333333333333', 'room_review_001', 'scheduled', NOW(), NOW()),
+      ('iiiiiiii-iiii-iiii-iiii-iiiiiiiiiiii', 'Completed: Sprint Retrospective', 'Retrospective meeting for the completed sprint.', NOW() - INTERVAL '1 day', 45, '11111111-1111-1111-1111-111111111111', 'room_retro_001', 'completed', NOW(), NOW())
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    console.log('✅ Meetings seeded successfully.');
+
+    // Create chat messages
+    const chatMessages = await sequelize.query(`
+      INSERT INTO chat_messages (id, meeting_id, user_id, message, message_type, created_at, updated_at) VALUES
+      ('jjjjjjjj-jjjj-jjjj-jjjj-jjjjjjjjjjjj', 'ffffffff-ffff-ffff-ffff-ffffffffffff', '11111111-1111-1111-1111-111111111111', 'Welcome everyone to today''s standup!', 'text', NOW(), NOW()),
+      ('kkkkkkkk-kkkk-kkkk-kkkk-kkkkkkkkkkkk', 'ffffffff-ffff-ffff-ffff-ffffffffffff', '22222222-2222-2222-2222-222222222222', 'Thanks! Ready to discuss my progress.', 'text', NOW(), NOW()),
+      ('llllllll-llll-llll-llll-llllllllllll', 'ffffffff-ffff-ffff-ffff-ffffffffffff', '33333333-3333-3333-3333-333333333333', 'I''ve completed the user authentication module.', 'text', NOW(), NOW()),
+      ('mmmmmmmm-mmmm-mmmm-mmmm-mmmmmmmmmmmm', 'gggggggg-gggg-gggg-gggg-gggggggggggg', '22222222-2222-2222-2222-222222222222', 'Let''s start with the agenda for today''s planning session.', 'text', NOW(), NOW())
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    console.log('✅ Chat messages seeded successfully.');
+
+    // Create bookmarks
+    const bookmarks = await sequelize.query(`
+      INSERT INTO bookmarks (id, user_id, book_id, page_number, created_at) VALUES
+      ('nnnnnnnn-nnnn-nnnn-nnnn-nnnnnnnnnnnn', '22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 15, NOW()),
+      ('oooooooo-oooo-oooo-oooo-oooooooooooo', '22222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 42, NOW()),
+      ('pppppppp-pppp-pppp-pppp-pppppppppppp', '33333333-3333-3333-3333-333333333333', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 8, NOW()),
+      ('qqqqqqqq-qqqq-qqqq-qqqq-qqqqqqqqqqqq', '33333333-3333-3333-3333-333333333333', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 23, NOW())
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    console.log('✅ Bookmarks seeded successfully.');
+
+    // Create notifications
+    const notifications = await sequelize.query(`
+      INSERT INTO notifications (id, user_id, type, message, read, created_at, updated_at) VALUES
+      ('rrrrrrrr-rrrr-rrrr-rrrr-rrrrrrrrrrrr', '22222222-2222-2222-2222-222222222222', 'meeting', 'New meeting scheduled: Weekly Team Standup', false, NOW(), NOW()),
+      ('ssssssss-ssss-ssss-ssss-ssssssssssss', '33333333-3333-3333-3333-333333333333', 'book', 'New book uploaded: Machine Learning Basics', false, NOW(), NOW()),
+      ('tttttttt-tttt-tttt-tttt-tttttttttttt', '44444444-4444-4444-4444-444444444444', 'system', 'Welcome to CMC Nouacour Library!', true, NOW(), NOW())
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    console.log('✅ Notifications seeded successfully.');
+
+    console.log('🎉 Database seeding completed successfully!');
+    console.log('\n📊 Sample data created:');
+    console.log('   👥 4 users (1 admin, 3 regular users)');
+    console.log('   📚 5 books across different categories');
+    console.log('   📅 4 meetings (3 scheduled, 1 completed)');
+    console.log('   💬 4 chat messages');
+    console.log('   🔖 4 bookmarks');
+    console.log('   🔔 3 notifications');
+    console.log('\n🔑 Test credentials:');
+    console.log('   Admin: admin@cmc-library.com / admin123');
+    console.log('   User: john@example.com / password123');
+    console.log('   User: jane@example.com / password123');
+    console.log('   User: bob@example.com / password123');
+
+  } catch (error) {
+    console.error('❌ Error seeding database:', error.message);
+    process.exit(1);
+  } finally {
+    await sequelize.close();
+  }
+}
+
+seedDatabase();
