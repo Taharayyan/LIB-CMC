@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useMeetings } from '../hooks/useMeetings';
-import CreateMeeting from '../components/Meeting/CreateMeeting';
-import MeetingList from '../components/Meeting/MeetingList';
+import React, { useState, useEffect } from "react";
+import { useMeetings } from "../hooks/useMeetings";
+import CreateMeeting from "../components/Meeting/CreateMeeting";
+import MeetingList from "../components/Meeting/MeetingList";
 
 const MeetingsPage = () => {
   const { meetings, loading, error, fetchMeetings } = useMeetings();
@@ -13,10 +13,12 @@ const MeetingsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading meetings...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-secondary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700 text-lg font-medium">
+            Loading meetings...
+          </p>
         </div>
       </div>
     );
@@ -24,41 +26,51 @@ const MeetingsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600">Error loading meetings: {error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="card max-w-md">
+          <p className="text-red-600 text-center">
+            ⚠️ Error loading meetings: {error}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Meetings</h1>
-            <p className="mt-2 text-gray-600">Schedule and join virtual meetings</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-10 flex flex-col sm:flex-row justify-between items-center gap-6 animate-fade-in">
+          <div className="text-center sm:text-left">
+            <h1 className="text-5xl font-bold gradient-text mb-3">
+              🗓️ Meetings
+            </h1>
+            <p className="text-xl text-gray-600">
+              Schedule and join virtual meetings
+            </p>
           </div>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
+            className="btn-primary text-lg px-8 py-3 whitespace-nowrap"
           >
-            Create Meeting
+            ➕ Create Meeting
           </button>
         </div>
 
         {showCreateForm && (
-          <CreateMeeting
-            onClose={() => setShowCreateForm(false)}
-            onSuccess={() => {
-              setShowCreateForm(false);
-              fetchMeetings();
-            }}
-          />
+          <div className="animate-slide-up mb-8">
+            <CreateMeeting
+              onClose={() => setShowCreateForm(false)}
+              onSuccess={() => {
+                setShowCreateForm(false);
+                fetchMeetings();
+              }}
+            />
+          </div>
         )}
 
-        <MeetingList meetings={meetings} />
+        <div className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <MeetingList meetings={meetings} />
+        </div>
       </div>
     </div>
   );

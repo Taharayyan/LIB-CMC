@@ -8,13 +8,13 @@ export const register = async (req, res) => {
     const { username, email, password } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      where: { $or: [{ email }, { username }] }
-    });
+    // const existingUser = await User.findOne({
+    //   where: { $or: [{ email }, { username }] }
+    // });
 
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+    // if (existingUser) {
+    //   return res.status(400).json({ message: 'User already exists' });
+    // }
 
     // Hash password
     const saltRounds = 10;
